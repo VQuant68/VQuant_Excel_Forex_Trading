@@ -1,0 +1,25 @@
+=== DỮ LIỆU TEST CHO SHEET "Raw daily data" ===
+(Copy từ dòng BTCUSD tới hết chữ GMT và paste vào ô A2 của sheet Raw daily data)
+
+BTCUSD	BTC_USD	buy	1.5	60000.00	500.00	80001	Fri, 24 Apr 2026 09:15:00 GMT
+EURUSD	EUR_USD	sell	100000	1.16500	150.00	80002	Fri, 24 Apr 2026 11:30:00 GMT
+GBPUSD	GBP_USD	buy	50000	1.25000	-200.00	80003	Fri, 24 Apr 2026 14:45:00 GMT
+USDJPY	USD_JPY	sell	100000	150.500	0.00	80004	Fri, 24 Apr 2026 16:00:00 GMT
+
+
+=== CÁCH KHAI BÁO BÊN SHEET "Daily Log" ===
+(Gõ vào các ô màu xanh của hàng bất kỳ, ví dụ hàng 2)
+
+- Cột A (Date): 24-Apr-2026
+- Cột B (Week#): 1
+- Cột D (Traded Y/N): Y
+- Cột G (Risk per Trade): 100
+
+
+=== KẾT QUẢ KỲ VỌNG TRÊN DAILY LOG ===
+Nếu file chạy đúng, bạn sẽ thấy các cột màu xám nảy số như sau:
+- Net P&L (cột H): 350$ (do 500 + 150 - 200)
+- # Trades (cột N): 4
+- # Wins (cột O): 2
+- Win Rate (cột S): 50%
+- Daily R-multiple (cột U): 3.5 R

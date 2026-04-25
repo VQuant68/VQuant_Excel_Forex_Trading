@@ -1,0 +1,55 @@
+================================================================================
+KỊCH BẢN TRẢI NGHIỆM THỰC TẾ DÀNH CHO KHÁCH HÀNG (FULL-FLOW TESTING)
+================================================================================
+
+Hãy đóng vai là một Trader vừa nhận được file "Trading_Workbook_MASTER.xlsx" và thực hiện theo luồng 4 bước dưới đây để hiểu rõ cách hệ thống tự động hóa công việc của bạn:
+
+--------------------------------------------------------------------------------
+BƯỚC 1: KHAI BÁO MỤC TIÊU (Thực hiện đầu tháng)
+--------------------------------------------------------------------------------
+* Mở file lên, chuyển sang tab "Summary". Tại đây, bạn sẽ cài đặt thông số vốn.
+* Nhập các thông số sau vào cột B (chỉ nhập vào ô màu xanh):
+  - B2 (Monthly Target)         : 2000    (Mục tiêu lãi tháng $2,000)
+  - B3 (Planned Trading Days)   : 20      (Sẽ trade 20 ngày)
+  - B5 (Weeks in Cycle)         : 4       (Tháng có 4 tuần)
+  - B8 (Risk % of NAV)          : 0.05    (Rủi ro 5% tài khoản)
+  - B9 (Max Daily Loss)         : 2       (Tối đa thua 2R một ngày)
+  - B10 (Starting NAV)          : 10000   (Vốn mang vào là $10k)
+👉 Kết quả: Ô B4 tự tính "Mỗi ngày cần kiếm $100 thì mới đạt chỉ tiêu tháng".
+
+--------------------------------------------------------------------------------
+BƯỚC 2: LÊN KẾ HOẠCH VÀO LỆNH (Thực hiện trước mỗi trade)
+--------------------------------------------------------------------------------
+* Chuyển sang tab "Advanced Setup Planner". Bạn sẽ điền dữ liệu từ biểu đồ TradingView vào đây.
+* Nhập nhanh các chỉ số EMA để hệ thống phân tích xu hướng:
+  - Cột B (từ B5 đến B16): Gõ lần lượt các số sau (để tạo trend LONG):
+    1.155, 1.150, 1.148, 1.145, 1.140, 1.140, 1.135, 1.130, 1.125, 1.120, 1.115, 1.110
+  - Ô E13 (Leg Low)             : 1.150
+  - Ô E14 (Leg High)            : 1.160
+* (Nhấn phím F9 hoặc Fn+F9 nếu số chưa nhảy).
+👉 Kết quả: Cuộn chuột xuống dưới cùng, hệ thống chớp sáng báo xu hướng "LONG". Bảng Entry (Ladders) hiện sẵn giá mua (Entry), giá cắt lỗ (SL), và khối lượng tiền rủi ro. Bạn chỉ cần lấy số này lên sàn giao dịch đặt lệnh.
+
+--------------------------------------------------------------------------------
+BƯỚC 3: GHI SỔ LỊCH SỬ GIAO DỊCH (Thực hiện sau khi trade xong)
+--------------------------------------------------------------------------------
+* Trở về từ phần mềm giao dịch (MT4/MT5), bạn xuất dữ liệu lịch sử trade.
+* Chuyển sang tab "Raw daily data", click vào ô A2 và Dán (Paste) dữ liệu giao dịch vào.
+* Dữ liệu mẫu để Copy/Paste test thử (bôi đen dòng dưới rồi Paste):
+  EURUSD	EURUSD	Buy	0.5	1.1560	250.00	101	Mon, 01 May 2026 09:00:00 GMT
+👉 Kết quả: Cột Profit (F2) ngay lập tức được tô màu XANH lá cây cho số $250.00.
+
+--------------------------------------------------------------------------------
+BƯỚC 4: TẬN HƯỞNG THÀNH QUẢ TỰ ĐỘNG (Kết thúc ngày)
+--------------------------------------------------------------------------------
+* Chuyển sang tab "Daily Log" để chốt sổ ngày hôm nay:
+  - Gõ vào ô A2 (Date)          : 5/1/2026
+  - Gõ vào ô B2 (Week #)        : 1
+  - Gõ vào ô D2 (Traded?)       : Y
+  (Nhấn phím F9 nếu cần).
+👉 Kết quả: Tiền Lãi $250 hiện lên màu xanh, Win rate báo 100%, tự động tổng kết bạn đã win bao nhiêu R.
+
+* Cuối cùng, quay lại trang chủ "Summary":
+👉 Kết quả: Bức tranh toàn cảnh hiện ra. Vốn của bạn (Current NAV) đã nhảy lên $10,250. Bảng Weekly Table ở Tuần 1 ghi nhận lãi $250.
+
+================================================================================
+Kết luận: Khách hàng hoàn toàn không cần tự tính toán dòng tiền, hệ thống đã vận hành trơn tru từ khâu phân tích vào lệnh đến thống kê kế toán!

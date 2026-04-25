@@ -1,0 +1,820 @@
+TASK_BRIEF_EMPLOYEE.txt================================================================================
+  TASK BRIEF – JULIO LAURENT | FOREX TRADING EXCEL WORKBOOK
+================================================================================
+  Ngày      : 23/04/2026
+  Khách hàng: Julio Laurent
+  Tên dự án : Forex Trading Excel Workbook
+  File gốc  : Trading_log_FIXED_v2 (2).xlsx
+  File output: Trading_Workbook_FINAL.xlsx
+  Ưu tiên   : CAO – hoàn thành sớm nhất có thể
+================================================================================
+
+
+================================================================================
+TRƯỚC KHI LÀM – ĐỌC ĐỂ HIỂU BỨC TRANH TỔNG THỂ
+================================================================================
+
+BẠN ĐANG LÀM GÌ?
+  File gốc đang có 14 sheets, rối rắm, không phù hợp để phân phối.
+  Nhiệm vụ là biến nó thành 6 sheets gọn gàng, chuyên nghiệp, sẵn sàng dùng ngay.
+
+TRƯỚC (14 sheets):              SAU (6 sheets):
+  Summary          [visible]      1. Instructions    [visible – TẠO MỚI]
+  Daily Log        [visible]      2. Summary         [visible]
+  Raw daily data   [visible]      3. Daily Log       [visible]
+  Planner_HUD      [visible]      4. Raw daily data  [visible]
+  Macro_Data       [visible]      5. Advanced Setup Planner [visible – GỘP HUD+v2]
+  Macro_Rates      [visible]      6. Backend         [Very Hidden – GỘP 6 sheets]
+  Macro_Speakers   [visible]
+  Setup Planner (old)  [hidden]
+  Planner_v2           [hidden]
+  Macro_Dashboard      [hidden]
+  Lists                [hidden]
+  Narrative_Engine     [hidden]
+  Planner_v2_layout_backup     [hidden]
+  Macro_Dashboard_layout_backup [hidden]
+
+LOGIC VẬN HÀNH CỦA FILE (quan trọng – phải nắm trước khi sửa):
+
+  [User nhập]──▶ Raw daily data (cột A-H)
+                      │ (SUMIFS/COUNTIFS tự tính)
+                      ▼
+                 Daily Log (cột H,N,O,P,Q,R,S,T,U,V,W,X,Y tự tính)
+                      │ (aggregate theo tuần)
+                      ▼
+                 Summary (cumulative P&L, trading days, weekly table)
+
+  [User nhập]──▶ Advanced Setup Planner (EMA, RSI, ATR, price levels, FVG, options)
+                      │ (scoring + ladder calc)
+                      ▼
+                 Advanced Setup Planner OUTPUT (Side LONG/SHORT, 4 Ladders, Narrative)
+                      │ (đọc từ Backend)
+                      ▲
+                 Backend (Macro_Dashboard + Macro_Data + Macro_Rates + Macro_Speakers
+                           + Narrative_Engine + Lists)
+
+  Summary!B19 đọc từ Advanced Setup Planner (Today's plan P&L)
+
+3 LỖI HAY GẶP – TRÁNH NGAY TỪ ĐẦU:
+  ✗ KHÔNG copy-paste cells rồi xóa sheet → dùng Rename Sheet để Excel tự update refs
+  ✗ KHÔNG gộp nhiều sheets vào Backend cùng lúc → làm từng sheet, verify xong mới tiếp
+  ✗ KHÔNG protect sheet trước khi test formulas xong
+
+LẦN ĐẦU MỞ FILE – LÀM NGAY 2 VIỆC:
+  1. Unhide tất cả sheets: Right-click tab bất kỳ → Unhide → unhide từng sheet
+     Xác nhận thấy đủ 14 sheets.
+  2. Lưu backup: Save As → Trading_log_ORIGINAL_BACKUP.xlsx
+     Không bao giờ làm việc trực tiếp trên file gốc.
+
+
+================================================================================
+DANH SÁCH 11 VIỆC CẦN LÀM (theo đúng thứ tự này)
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ VIỆC 1: XÓA 3 SHEETS THỪA                                                  │
+│ Thời gian dự kiến: 5 phút                                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Xóa 3 sheets sau (không có sheet nào khác đọc từ chúng, xóa an toàn 100%):
+  - Planner_v2_layout_backup
+  - Macro_Dashboard_layout_backup
+  - Setup Planner (old)
+
+Cách xóa: Right-click tab → Delete → confirm.
+
+Kết quả mong đợi: File còn đúng 11 sheets.
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ VIỆC 2: TẠO NAMED RANGES CHO SHEET "LISTS" (bắt buộc làm trước khi gộp)   │
+│ Thời gian dự kiến: 15 phút                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Tại sao phải làm việc này:
+  Sheet Lists chứa giá trị cho các dropdown trong file. Khi mình ẩn Lists vào Backend
+  (Very Hidden), Excel sẽ không cho Data Validation đọc từ đó nữa → dropdowns bị vỡ.
+  Giải pháp: tạo Named Ranges → Data Validation dùng Name thay vì trỏ thẳng vào sheet.
+
+Cách làm:
+  1. Mở sheet Lists. Nội dung là 55 rows values, gồm các nhóm:
+       A2:A7   → Bull, Bear, Range, Up, Down, None
+       A8:A10  → 1, 2, 3
+       A11:A19 → Falling, Neutral, Rising, Softening, Mixed, Tight, Slowing, Stable, Accelerating
+       A20:A22 → More cuts, Hold/uncertain, Fewer cuts
+       A23:A25 → Risk-on, Mixed, Risk-off
+       A26:A31 → Inflation-US, Labour-US, Growth-US, Inflation-EUR, Labour-EUR, Growth-EUR
+       A35:A55 → Tên CB speakers (Schnabel, Powell, Lagarde...)
+
+  2. Tạo Named Ranges (Formulas → Name Manager → New):
+       LT_TrendBull  → =Lists!$A$2:$A$7
+       LT_WeekNum    → =Lists!$A$8:$A$10
+       LT_MacroDir   → =Lists!$A$11:$A$19
+       LT_RatePolicy → =Lists!$A$20:$A$22
+       LT_RiskEnv    → =Lists!$A$23:$A$25
+       LT_CategoryUS → =Lists!$A$26:$A$31
+       LT_Speakers   → =Lists!$A$35:$A$55
+
+  3. Tìm tất cả ô đang dùng Data Validation với source từ Lists:
+       Data → Data Validation → nếu Source đang là =Lists!$A$x:$A$y
+       → đổi thành =LT_TrendBull (hoặc named range tương ứng)
+
+  4. Tạm thời Hide sheet Lists → test thử các dropdown còn hoạt động không.
+
+Kết quả mong đợi: Tất cả dropdown trong file vẫn chạy dù Lists đang bị hide.
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ VIỆC 3: GỘP PLANNER_HUD + PLANNER_V2 → "ADVANCED SETUP PLANNER"           │
+│ Thời gian dự kiến: 60-90 phút                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Hiểu về 2 sheets này trước khi gộp:
+  Planner_HUD: Nơi user nhập liệu (EMA, RSI, ATR, price levels, FVG, options)
+               + Nơi hiển thị kết quả output (Side, Ladders, Narrative)
+  Planner_v2:  Toàn bộ engine tính toán bên trong (37 cột công thức)
+               Planner_v2 đọc inputs từ Planner_HUD → tính → kết quả về Planner_HUD
+
+  Cả 2 sheets đang trao đổi dữ liệu qua lại với nhau. Mình gộp thành 1 sheet duy nhất
+  để user chỉ thao tác ở 1 nơi.
+
+Cách làm:
+
+  BƯỚC 3.1 – Rename Planner_v2 thành "Advanced Setup Planner"
+    Double-click tab "Planner_v2" → gõ "Advanced Setup Planner" → Enter
+    ⚡ Excel TỰ UPDATE toàn bộ references trỏ vào Planner_v2 trong file.
+    TUYỆT ĐỐI không copy-paste – chỉ rename.
+
+  BƯỚC 3.2 – Kiểm tra ngay sau rename (mở từng sheet bên dưới, tìm #REF!):
+    - Summary!B19: phải thấy =Advanced Setup Planner!AF18
+    - Narrative_Engine: các refs trỏ Planner_v2 phải đổi thành Advanced Setup Planner
+    - Macro_Dashboard: AC37, AC39, AC40 phải đổi tên sheet
+    Nếu có #REF! → sửa thủ công ngay.
+
+  BƯỚC 3.3 – Tích hợp input section của Planner_HUD vào Advanced Setup Planner
+    Layout gợi ý cho "Advanced Setup Planner" sau khi gộp:
+    ┌─────────────────────────┬────────────────────────────────────────────────┐
+    │  CỘT A-M: INPUT PANEL   │  CỘT N-AK: ENGINE (group lại, có thể ẩn)      │
+    │  (nơi user nhập – xanh) │  (công thức tính toán – xám, locked)           │
+    ├─────────────────────────┴────────────────────────────────────────────────┤
+    │  PHẦN DƯỚI: OUTPUT DISPLAY (grey – locked)                               │
+    │  Side, Trade Mode, 4 Ladders, Narrative, R values                        │
+    └──────────────────────────────────────────────────────────────────────────┘
+
+    Inputs cần có trong INPUT PANEL (copy từ Planner_HUD):
+      Block 1 – EMAs:
+        EMA9 15m, EMA21 15m, EMA50 15m, SMA200 15m
+        EMA50 1H, EMA50 4H
+        EMA50 1D, EMA100 1D, EMA200 1D
+        EMA50 1W, EMA20 1M
+        Current Price
+
+      Block 2 – RSI & Volatility:
+        RSI 15M, RSI 1H, RSI 4HR
+        ATR(14) 15m, ADR(14)
+
+      Block 3 – Price Levels:
+        PWH (Prev Week High), PWL (Prev Week Low)
+        PDH (Prev Day High),  PDL (Prev Day Low)
+        EQH_above (Equal Highs), EQL_below (Equal Lows)
+        LTF Leg Low (15m), LTF Leg High (15m)
+        Session Low, Session High
+        HTF Swing Low (4H), HTF Swing High (4H)
+
+      Block 4 – FVG Zones:
+        Daily FVG high, Daily FVG low
+        1H FVG high, 1H FVG low
+
+      Block 5 – Options Gamma:
+        Strike 1, Size 1 (bn)
+        Strike 2, Size 2 (bn)
+        Strike 3, Size 3 (bn)
+        Strike 4, Size 4 (bn)
+        Magnet Range (pips) = 20
+        Options Clamp % = 0.3
+        Zone tolerance = 0.0002
+
+      Block 6 – Ladder Controls:
+        Weight 0.382 = 0.20
+        Weight 0.500 = 0.35
+        Weight 0.618 = 0.45
+        Min R = 3
+
+      Block 7 – SMC Structure:
+        [Bảng 4 rows: 1D / 4H / 1H / 15M]
+        Cột: TF | Trend (auto) | Last BOS (manual) | Last CHOCH (manual)
+
+    Cách tích hợp:
+    a. Trong Advanced Setup Planner, tạo vùng input mới ở area trống (ví dụ cols AN-AZ)
+    b. Paste values từ Planner_HUD sang (paste special → values only)
+    c. Trong engine columns (M-AK): dùng Ctrl+H tìm 'Planner_HUD'! → xóa prefix
+       (vì giờ cùng sheet rồi, không cần sheet name nữa)
+    d. Kiểm tra references vẫn trỏ đúng cell mới
+
+  BƯỚC 3.4 – Verify outputs hoạt động đúng:
+    Nhập thử: EMA9 > EMA21 > EMA50 > SMA200 (all bullish stack)
+              Current Price > EMA50 1H > EMA50 4H
+    → Ô Side phải hiện: LONG
+    Nhập ngược lại (bearish) → Side phải hiện: SHORT
+    Trade Mode phải thay đổi theo inputs.
+    4 Ladders phải hiện Entry/TP/SL có giá trị (không phải #REF! hay trống)
+
+  BƯỚC 3.5 – Xóa Planner_HUD (sau khi verify xong):
+    Right-click tab Planner_HUD → Delete → confirm
+    Test lại lần nữa: Advanced Setup Planner vẫn chạy đúng không.
+
+Kết quả mong đợi: 1 sheet "Advanced Setup Planner" với input panel bên trái,
+                  outputs bên dưới, không còn Planner_HUD riêng lẻ.
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ VIỆC 4: TẠO SHEET "BACKEND" VÀ GỘP 6 SHEETS VÀO ĐÓ                       │
+│ Thời gian dự kiến: 90-120 phút                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+6 sheets cần gộp: Lists, Narrative_Engine, Macro_Speakers, Macro_Rates,
+                  Macro_Data, Macro_Dashboard
+
+NGUYÊN TẮC: Làm TỪng sheet, theo đúng thứ tự dưới. Sau mỗi sheet → mở Excel
+            kiểm tra không có #REF! trước khi tiếp.
+
+  BƯỚC 4.0 – Tạo sheet mới tên "Backend", đặt ở vị trí cuối cùng.
+    Trong Backend, tạo các section headers để biết data nào ở đâu:
+      Rows 1-5:   [SECTION: LISTS]
+      Rows 10-70: [SECTION: NARRATIVE_ENGINE]
+      Rows 80-120: [SECTION: MACRO_SPEAKERS]
+      Rows 130-145: [SECTION: MACRO_RATES]
+      Rows 150-250: [SECTION: MACRO_DATA]
+      Rows 260-310: [SECTION: MACRO_DASHBOARD]
+
+  BƯỚC 4.1 – Gộp LISTS vào Backend
+    a. Copy toàn bộ nội dung Lists (A1:A55) → paste vào Backend rows 1-55 (cột A)
+    b. Update Named Ranges: Formulas → Name Manager
+       Đổi từng Name: =Lists!$A$x:$A$y → =Backend!$A$x:$A$y
+    c. Test dropdown vẫn hoạt động → Delete sheet Lists
+
+  BƯỚC 4.2 – Gộp NARRATIVE_ENGINE vào Backend
+    a. Copy toàn bộ Narrative_Engine (35 rows × 4 cols) → paste vào Backend rows 80-114
+    b. Sau khi paste: các refs từ Advanced Setup Planner trỏ Narrative_Engine!Bxx
+       → dùng Ctrl+H đổi thành Backend!Bxx (với row offset tương ứng)
+    c. Verify: Advanced Setup Planner vẫn hiển thị Narrative text
+    d. Delete sheet Narrative_Engine
+
+  BƯỚC 4.3 – Gộp MACRO_SPEAKERS vào Backend
+    a. Copy Macro_Speakers (34 rows × 16 cols) → paste vào Backend rows 120-154
+    b. Macro_Dashboard đọc từ Macro_Speakers!H:H → update ref sang Backend!H120:H154
+    c. Verify: không có #REF! trong Backend ở phần Macro_Dashboard
+    d. Delete sheet Macro_Speakers
+
+  BƯỚC 4.4 – Gộp MACRO_RATES vào Backend
+    a. Copy Macro_Rates (12 rows × 15 cols) → paste vào Backend rows 160-172
+    b. Macro_Rates đọc từ Macro_Data!Z2 → note lại, sẽ update ở bước 4.5
+    c. Macro_Dashboard đọc từ Macro_Rates!J:J → update ref
+    d. Delete sheet Macro_Rates
+
+  BƯỚC 4.5 – Gộp MACRO_DATA vào Backend (phức tạp nhất)
+    a. Macro_Data có Table9 structure → khi copy sang Backend:
+       KHÔNG paste as table, paste as plain range (Paste Special → Values+Formats)
+       Sau đó copy lại formulas (Rows 2+) thủ công
+    b. Copy Macro_Data (90 rows × 27 cols) → paste vào Backend rows 180-270
+    c. Macro_Dashboard đang dùng: =LOOKUP(2,1/((Macro_Data!$B$2:$B$148=...))
+       → Dùng Ctrl+H đổi Macro_Data! → Backend! (kiểm tra row offset)
+    d. Macro_Rates (đã vào Backend rows 160-172) đọc Macro_Data!Z2 → đổi thành Backend!Z18x
+    e. ⚠️ CIRCULAR: Macro_Data!X (TrendScore) dùng VLOOKUP trỏ Macro_Dashboard!D5:E18
+       Khi cả 2 đều trong Backend cùng sheet → không còn cross-sheet circular nữa
+       Verify: Excel không cảnh báo circular sau khi gộp xong
+    f. Delete sheet Macro_Data
+
+  BƯỚC 4.6 – Gộp MACRO_DASHBOARD vào Backend (cuối cùng, nhiều refs nhất)
+    a. Copy Macro_Dashboard (42 rows × 20 cols) → paste vào Backend rows 280-322
+    b. Nhiều sheets đọc từ Macro_Dashboard:
+       - Advanced Setup Planner: Macro_Dashboard!AC37, AC39, AC40, B34, B37
+       - Narrative_Engine (đã trong Backend): B8, B9, B14, B17, B19, B20
+       Dùng Ctrl+H trong file để tìm và đổi toàn bộ "Macro_Dashboard!" → "Backend!"
+       (với row offset tương ứng khi paste vào rows 280+)
+    c. Verify kỹ: Advanced Setup Planner phải vẫn hiển thị:
+       - Macro Bias output ("Buy dips" / "Sell rallies" / "Neutral")
+       - Macro gates (AC37, AC39, AC40)
+    d. Delete sheet Macro_Dashboard
+
+  BƯỚC 4.7 – Ẩn Backend thành Very Hidden
+    Đây là cách duy nhất để ẩn sheet mà người dùng không thể Unhide từ menu Excel:
+    a. Mở VBA Editor: Alt+F11 (Windows) hoặc Option+F11 (Mac)
+    b. Trong Project Explorer bên trái: click chọn sheet "Backend"
+    c. Ở panel Properties (phía dưới trái): tìm dòng "Visible"
+       → Đổi thành: 2 - xlSheetVeryHidden
+    d. Đóng VBA Editor (Alt+F4 hoặc Command+Q)
+    e. Save file → vẫn là .xlsx, không có VBA code nào chạy
+       (VeryHidden là thuộc tính của sheet, không phải macro)
+    f. Verify: Right-click tab bất kỳ → Unhide → Backend KHÔNG XUẤT HIỆN trong list
+
+Kết quả mong đợi: Chỉ còn 5 tabs visible. Backend ẩn hoàn toàn.
+                  Tất cả formulas trong Advanced Setup Planner và Summary vẫn chạy đúng.
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ VIỆC 5: AUDIT & SỬA FORMULAS                                               │
+│ Thời gian dự kiến: 60 phút                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Test bằng cách nhập dummy data thật, không nhìn công thức mà đoán.
+
+  TEST 1 – Luồng Raw data → Daily Log → Summary:
+    a. Paste 5 trade rows vào Raw daily data (cột A-H):
+         A=EURUSD, B=EUR_USD, C=buy, D=200000, E=1.15000, F=150 (profit $)
+         G=99001, H="Wed, 23 Apr 2026 09:00:00 GMT"
+       Làm 3 ngày khác nhau, mix win (F>0) và loss (F<0)
+    b. Kiểm tra Daily Log ngay:
+       - Cột H (Net P&L): phải = tổng profit cùng ngày đó
+       - Cột N (#Trades): phải đếm đúng số trades ngày đó
+       - Cột O (#Wins): phải đếm đúng số F > 0
+       - Cột S (Win Rate): phải = O/N (%)
+       - Cột U (Daily R): phải = H/F (R-multiple ngày đó)
+       - Cột W (Intraday PnL): phải = giá trị lớn nhất cumulative trong ngày
+    c. Kiểm tra Summary:
+       - B11 (Cumulative P&L): phải = tổng tất cả H trong Daily Log
+       - B13 (Trading Days Used): phải = số ngày cột D = "Y"
+       - Weekly table: tuần có trades phải aggregate đúng
+
+  SỬA NẾU CÓ LỖI:
+    Summary B7 = B6/B17:
+      Trace bằng Formulas → Trace Precedents. B17 phụ thuộc B16 → B18 → K22.
+      Nếu có circular → trace từng bước, xác định điểm bị lặp.
+
+    Summary B18 = IF(K22>0, B11/K22, ""):
+      Khi K22=0 phải hiển thị "" không phải #DIV/0!
+      Nếu lỗi → wrap thêm IFERROR bên ngoài.
+
+    Daily Log cột I và J (Cột Trade Date và Cumulative P&L trong Raw data):
+      Cột I: =IF(H2="","",DATEVALUE(MID(H2,6,11)))
+      Test với chuỗi "Wed, 23 Apr 2026 09:00:00 GMT" → MID(H2,6,11) = "23 Apr 2026"
+      Nếu không ra ngày → thêm IFERROR:
+        =IFERROR(IF(H2="","",DATEVALUE(MID(H2,6,11))),"Check date format")
+
+    Daily Log cột W và Y (MAXIFS/MINIFS):
+      Nếu bị lỗi #NAME? → hỏi PM phiên bản Excel, đổi sang array formula:
+        Cột W: {=IF(A2="","",MAX(IF('Raw daily data'!$I:$I=A2,'Raw daily data'!$J:$J)))}
+        Cột Y: {=IF(A2="","",ABS(MIN(0,MIN(IF('Raw daily data'!$I:$I=A2,'Raw daily data'!$J:$J))))/G2)}
+        (Nhập bằng Ctrl+Shift+Enter thay vì Enter thông thường)
+
+  THÊM DATA VALIDATION:
+    Daily Log cột D (Y/N): Chọn D2:D100 → Data → Data Validation → List → Source: Y,N
+    Raw daily data cột C (Side): Chọn C2:C500 → Data Validation → List → Source: buy,sell
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ VIỆC 6: XÓA TEST DATA – CHUẨN BỊ BLANK TEMPLATE                          │
+│ Thời gian dự kiến: 20 phút                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Xóa đúng cells, giữ nguyên công thức:
+
+  Daily Log: Chọn và Delete (không phải Backspace) các vùng sau:
+    - Cột A (Dates): A2:A100 → Delete
+    - Cột B (Week#): B2:B100 → Delete
+    - Cột D (Y/N):   D2:D100 → Delete
+    - Cột M (Notes): M2:M100 → Delete
+    Các cột E,F,G,H,I,J,K,L,N-Y: GIỮ NGUYÊN (công thức)
+    Verify: khi A2 trống → các công thức cột E,F,G... phải hiển thị "" (trống)
+            không được hiển thị 0 hay #VALUE!
+
+  Raw daily data: Xóa toàn bộ rows 2 trở đi (giữ header row 1)
+    Select row 2 đến row cuối cùng có data → Right-click → Delete Rows
+
+  Summary inputs về default:
+    B2 (Monthly Target) = 10000
+    B10 (Current NAV) = 10000
+    Giữ: B3=17, B5=4, B8=0.07, B9=2
+
+  Advanced Setup Planner: Xóa tất cả input cells (blue cells):
+    EMA values, RSI values, Current Price, tất cả price levels,
+    FVG zones, Options strikes/sizes, BOS/CHOCH manual inputs
+    GIỮ NGUYÊN tất cả formulas output
+
+  Backend – Macro_Data section: Giữ nguyên historical data (không xóa)
+
+Kết quả mong đợi: Mở file lên, tất cả input cells trống. Formula cells hiển thị ""
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ VIỆC 7: ĐỊNH DẠNG CHUYÊN NGHIỆP                                            │
+│ Thời gian dự kiến: 60-90 phút                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+MÀU SẮC (áp dụng nhất quán TẤT CẢ sheets):
+
+  Loại ô                  | Màu nền    | Màu chữ
+  ─────────────────────────┼────────────┼──────────
+  Input (user nhập)        | #D6E4F0   | #1A3A5C
+  Formula (tự tính, lock)  | #F5F5F5   | #666666
+  Header cột/vùng          | #1A3A5C   | #FFFFFF (Bold 12pt)
+  Title sheet              | #0D2137   | #FFFFFF (Bold 14pt)
+  P&L dương (> 0)          | #E8F8F0   | #1A7A4A   ← conditional formatting
+  P&L âm (< 0)             | #FDECEA   | #B71C1C   ← conditional formatting
+  Cảnh báo (loss > 80%)    | #FFF3E0   | #E65100   ← conditional formatting
+  Nguy hiểm (loss = 100%)  | #FFCDD2   | #7F0000   ← conditional formatting
+
+FONT: Calibri 11pt xuyên suốt. Headers Bold 12pt. Titles Bold 14pt.
+
+  Summary:
+    - Row 1: title "TRADING PERFORMANCE SUMMARY" span full width, nền #0D2137
+    - 6 ô input (B2,B3,B5,B8,B9,B10): nền #D6E4F0
+    - Tất cả ô formula: nền #F5F5F5
+    - Weekly table header (row 21): nền #1A3A5C, chữ trắng, bold
+    - Weekly table rows 22-25: alternating trắng / #F9FAFB
+    - Conditional formatting: F22:F25 và H22:H25 (dương=xanh, âm=đỏ)
+    - Freeze Row 1 (View → Freeze Panes → Freeze Top Row)
+    - Số: $#,##0.00 cho $; 0.0% cho %; 0.00 cho R
+
+  Daily Log:
+    - Header row 1: tất cả 25 cột, nền #1A3A5C, chữ trắng, Bold
+    - Cột A,B,D,M: nền #D6E4F0 (input)
+    - Cột C,E,F,G,H,I,J,K,L,N-Y: nền #F5F5F5 (formula)
+    - Conditional: H cột (Net P&L) dương/âm; V cột (Losses vs Cap) warning/danger
+    - Column widths: A=12, B=8, C=12, D=8, E-L=11, M=25, N-Y=9
+    - Freeze Row 1
+
+  Raw daily data:
+    - Header row 1: nền #1A3A5C, chữ trắng, Bold
+    - Cột A-H: nền #D6E4F0 (user paste vào đây)
+    - Cột I-J: nền #F5F5F5 (formula tự tính)
+    - Thêm text vào header: "→ Paste broker data into columns A–H only. Do not edit I–J."
+    - Freeze Row 1
+
+  Advanced Setup Planner:
+    - Chia 3 vùng rõ ràng với header:
+        "MARKET INPUTS" (nền #0D2137): input panel
+        "TRADE PLAN OUTPUT" (nền #0D2137): output display
+    - Input cells: #D6E4F0; Output cells: #F5F5F5
+    - Conditional formatting ô Side: "LONG" → nền xanh; "SHORT" → nền đỏ nhạt
+    - Conditional formatting ô Trade Mode:
+        "CoreLong" / "A+Long" → xanh; "CTshort" → đỏ nhạt; "Avoid" → đỏ đậm
+    - Ladder tables: grid lines rõ, alternating rows
+    - Group columns engine (M-AK): chọn columns → Right-click → Group
+      (cho phép thu gọn, không cần nhìn thấy thường xuyên)
+
+  Tab colors:
+    Instructions: màu xám nhạt
+    Summary: màu xanh đậm
+    Daily Log: màu xanh nhạt
+    Raw daily data: màu tím nhạt
+    Advanced Setup Planner: màu cam/vàng
+
+  Tất cả sheets: View → uncheck Gridlines (bỏ gridlines mặc định để trông clean hơn)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ VIỆC 8: TẠO TAB "INSTRUCTIONS"                                             │
+│ Thời gian dự kiến: 45-60 phút                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Thêm sheet mới, đặt tên "Instructions", kéo lên VỊ TRÍ ĐẦU TIÊN trong file.
+
+Nội dung và layout (viết bằng tiếng Anh – đây là workbook phân phối cho trading community):
+
+────────────────────────────────────────────
+HEADER: "FOREX TRADING WORKBOOK — USER GUIDE"
+Version 1.0 | Ready for distribution
+────────────────────────────────────────────
+
+SECTION 1 – COLOR GUIDE (demo thực tế bằng ô màu)
+  ■ Blue cells  = YOU enter these (inputs)
+  ■ Grey cells  = Auto-calculated, do NOT edit
+
+SECTION 2 – HOW THIS WORKBOOK WORKS
+  This workbook has 5 tabs:
+  1. Instructions    → You are here. Read this first.
+  2. Summary         → Monthly performance dashboard. Fill once per month.
+  3. Daily Log       → Your daily trading journal. Fill each trading day.
+  4. Raw daily data  → Paste your broker trade history here daily.
+  5. Advanced Setup Planner → Fill before each trading session.
+
+  Data flow: Raw data → Daily Log → Summary (auto)
+             Your inputs → Advanced Setup Planner → Trade plan (auto)
+
+SECTION 3 – SUMMARY TAB
+  Fill these 6 cells at the start of each month:
+    Monthly Profit Target ($)     → How much you aim to make this month
+    Planned Active Trading Days   → How many days you plan to trade
+    Weeks in Cycle                → Usually 4
+    Risk % per trade              → e.g. 0.07 means 7% of NAV
+    Max Daily Loss (R multiples)  → e.g. 2 means stop trading after -2R
+    Current NAV ($)               → Your account balance on day 1
+
+  Everything else auto-calculates:
+    Projected Month P&L           → Forecast if you maintain current pace
+    Required R per Day            → How many R you need each remaining day
+    Weekly performance table      → Auto-summary for each of the 4 weeks
+
+SECTION 4 – DAILY LOG TAB
+  Each trading day, fill 4 columns only:
+    Column A → Today's date
+    Column B → Which week of the cycle (1, 2, 3, or 4)
+    Column D → Y if you traded today, N if you did not
+    Column M → Notes (psychology, market conditions, lessons)
+
+  Do NOT touch columns E, F, G, H, I, J, K, L, N through Y — they auto-calculate.
+
+  Column reference:
+    E=Start NAV | F=Risk/Trade$ | G=Max Loss Cap | H=Net P&L | I=Cumul P&L
+    J=Week P&L  | K=Weekly Target | L=Variance | N=#Trades | O=#Wins | P=#Losses
+    Q=Total Wins$ | R=Total Losses$ | S=Win Rate | T=R:R | U=Daily R-multiple
+    V=Loss%ofCap  | W=Intraday PnL  | X=%Cap Used | Y=Worst Drawdown%
+
+SECTION 5 – RAW DAILY DATA TAB
+  How to import from your broker (MT4/MT5):
+    Step 1: In MT4/MT5, go to Account History
+    Step 2: Right-click → Save as Report → select date range
+    Step 3: Open the exported file, copy these columns:
+            Symbol | Name | Side | Quantity | Price | Profit | Deal ID | Time
+    Step 4: In this workbook, delete rows 2 and below in "Raw daily data"
+    Step 5: Paste your data starting from row 2, columns A through H
+
+  IMPORTANT:
+    · Column H (Time) must be in this exact format: "Wed, 23 Apr 2026 09:00:00 GMT"
+    · Columns I and J are formulas — never overwrite them
+    · Paste in chronological order (oldest trade first)
+
+SECTION 6 – ADVANCED SETUP PLANNER TAB
+  Fill this every morning before your trading session.
+
+  Step 1 – Enter EMAs (from your charting platform):
+    EMA 9, 21, 50 on 15-min chart
+    SMA 200 on 15-min chart
+    EMA 50 on 1H, EMA 50 on 4H
+    EMA 50, 100, 200 on Daily chart
+    EMA 50 on Weekly, EMA 20 on Monthly
+    Current Price
+
+  Step 2 – Enter RSI and volatility:
+    RSI(14) from 15m, 1H, and 4H charts
+    ATR(14) from 15m chart
+    ADR(14) – Average Daily Range
+
+  Step 3 – Enter price levels (from manual chart observation):
+    Previous Week High (PWH) and Low (PWL)
+    Previous Day High (PDH) and Low (PDL)
+    Equal Highs above market (EQH) and Equal Lows below (EQL)
+    15m swing leg: Low to High of the most recent impulse
+    Session High and Low (current session)
+    4H HTF Swing High and Low
+
+  Step 4 – Enter FVG zones (if visible on chart):
+    Daily Fair Value Gap: high and low boundary
+    1H Fair Value Gap: high and low boundary
+    Leave blank if no clear FVG is present.
+
+  Step 5 – Enter Options Gamma (if you have this data):
+    Up to 4 strikes with open interest
+    Size (bn) = notional open interest in billions
+    Leave blank if unavailable.
+
+  Step 6 – Read the outputs (auto-calculated):
+    SIDE          → LONG or SHORT (based on HTF EMA alignment)
+    TRADE MODE    → CoreLong / A+Long / CTshort / Avoid
+    PRIMARY LADDER → 3 entry rungs at Fibonacci 0.382 / 0.500 / 0.618
+    VALUE LADDER   → Mid-depth retracement entries
+    A+ LADDER      → Deep value zone premium entries
+    CT LADDER      → Counter-trend entries (only active when SIDE = SHORT)
+    NARRATIVE      → Plain English summary of macro + structure context
+
+  Trade mode explained:
+    CoreLong → HTF trend aligned, standard continuation trade
+    A+Long   → Premium deep zone, can size up slightly
+    CTshort  → Counter-trend fade at resistance, reduce size
+    Avoid    → System conditions not met — do not trade today
+
+SECTION 7 – MACRO DATA (advanced users only)
+  The macro scoring engine is pre-built. Update it weekly on Mondays:
+  · Add new economic events (CPI, NFP, GDP, rate decisions) to the data log
+  · Add central bank speaker remarks with tone: Hawkish / Neutral / Dovish
+  → Contact your account manager if you need access to the backend data.
+
+SECTION 8 – NEW MONTH RESET
+  At the start of each new month:
+  1. Save the current file as: Trading_[Month][Year].xlsx (e.g. Trading_Apr2026.xlsx)
+  2. Open the master template file (this file)
+  3. Update Summary → Current NAV = ending balance of last month
+  4. Update Summary → Monthly Target if it has changed
+  5. Delete the content in Daily Log columns A, B, D, M (keep formulas)
+  6. Delete rows 2 and below in Raw daily data
+  7. Clear all blue input cells in Advanced Setup Planner
+  8. Save — you are ready for the new month
+
+SECTION 9 – FAQS
+  Q: Some cells show "" (empty) instead of numbers — is that a bug?
+  A: No. Cells are intentionally blank until you enter data. This prevents errors.
+
+  Q: Can I add more rows to the Daily Log?
+  A: Yes. Insert a row, then copy the formulas from the row above into all formula columns.
+
+  Q: CT Ladder shows "CT inactive" — what does that mean?
+  A: CT (Counter-trend) trades only apply when SIDE = SHORT.
+     When SIDE = LONG, CT ladder is disabled by design.
+
+  Q: Macro Bias shows "Neutral" — should I trade?
+  A: Neutral means USD and EUR macro scores are balanced — no clear macro edge.
+     Check your technical setup. If Trade Mode = Avoid, do not trade.
+
+────────────────────────────────────────────
+Kết quả mong đợi: Tab Instructions đẹp, dễ đọc, mỗi section có header navy rõ ràng.
+                  Có navigation buttons hyperlink đến từng tab.
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ VIỆC 9: THÊM TOOLTIPS VÀO ADVANCED SETUP PLANNER                          │
+│ Thời gian dự kiến: 30 phút                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Cách thêm: Right-click vào ô input → Insert Comment → gõ text.
+
+Copy text tooltip sau đây cho đúng ô tương ứng:
+
+  EMA 9 (15m)     : "EMA 9 from 15-minute chart. Short-term momentum. If price > EMA9, bullish pressure."
+  EMA 21 (15m)    : "EMA 21 from 15-min chart. Cross with EMA9 = momentum shift signal."
+  EMA 50 (15m)    : "EMA 50 on 15min. Key short-term structure level."
+  SMA 200 (15m)   : "200 SMA on 15min = major intraday support or resistance zone."
+  EMA 50 (1H)     : "1H EMA50 = primary intraday trend filter. Price above = bullish context."
+  EMA 50 (4H)     : "4H EMA50 = medium-term bias. Core filter for LONG vs SHORT decision."
+  EMA 50 (1D)     : "Daily EMA50 = long-term trend anchor."
+  EMA 200 (1D)    : "Daily EMA200 = The golden line. Above = long-term bull regime."
+  EMA 50 (1W)     : "Weekly EMA50 = major trend filter. Changes slowly."
+  EMA 20 (1M)     : "Monthly EMA20 = macro direction anchor for swing context."
+  RSI 15M         : "RSI(14) on 15min chart. Below 45 = bearish momentum. Above 55 = bullish."
+  RSI 1H          : "RSI(14) on 1H chart. Below 45 supports LONG bias in scoring engine."
+  RSI 4HR         : "RSI(14) on 4H chart. HTF momentum confirmation."
+  ATR(14) 15m     : "Average True Range on 15min. Auto-sets stop floor in pips."
+  ADR(14)         : "Average Daily Range in pips. Helps gauge if TP target is realistic today."
+  Current Price   : "Current live mid-price of EURUSD. Drives all trend calculations."
+  PWH / PWL       : "Previous Week High/Low. Key liquidity levels — price often sweeps these."
+  PDH / PDL       : "Previous Day High/Low. Nearest intraday resistance/support."
+  EQH above       : "Equal Highs above market = liquidity pool. May be targeted by stop hunt."
+  EQL below       : "Equal Lows below market = buy-side liquidity below price."
+  Daily FVG       : "Daily Fair Value Gap. Price tends to revisit and fill this imbalance."
+  1H FVG          : "1H Fair Value Gap. Short-term imbalance zone."
+  Strike 1-4      : "Options strike with large open interest. Acts as price magnet within 20 pips."
+  Size (bn)       : "Notional size in billions. Larger = stronger magnet effect."
+  Magnet Range    : "Distance in pips within which a strike is 'active'. Default: 20."
+  Weight 0.382    : "Position size weight for Fib 0.382 entry rung. Default: 0.20. Must sum to 1.0."
+  Weight 0.500    : "Position size weight for Fib 0.500 entry rung. Default: 0.35."
+  Weight 0.618    : "Position size weight for Fib 0.618 entry rung. Default: 0.45."
+  Min R           : "Minimum R-multiple to accept a trade. Below this threshold = skip. Default: 3."
+  BOS (per TF)    : "Break of Structure — most recent confirmed BOS direction (from your chart)."
+  CHOCH (per TF)  : "Change of Character — signals potential trend reversal. Observe manually."
+  Side (output)   : "AUTO. Do not edit. Determined by HTF EMA alignment across 1D + 4H."
+  Trade Mode (out): "AUTO. CoreLong=follow trend; A+Long=premium entry; CTshort=fade; Avoid=no trade."
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ VIỆC 10: BẢO VỆ CÔNG THỨC (PROTECTION)                                    │
+│ Thời gian dự kiến: 30 phút                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Cách chuẩn: Lock tất cả → Unlock inputs → Protect sheet.
+Hỏi PM password để điền vào chỗ [...] trước khi làm bước này.
+
+Thứ tự làm với từng sheet:
+
+  Summary:
+    1. Ctrl+A → Format Cells → Protection → tích "Locked"
+    2. Chọn ô B2, B3, B5, B8, B9, B10 → Format Cells → Protection → BỎ "Locked"
+    3. Review → Protect Sheet → Password: [hỏi PM]
+       Allow: "Select locked cells" + "Select unlocked cells" + "Use AutoFilter"
+
+  Daily Log:
+    1. Ctrl+A → Lock tất cả
+    2. Chọn range A2:A100, B2:B100, D2:D100, M2:M100 → Unlock
+    3. Protect Sheet → Password: [hỏi PM]
+
+  Raw daily data:
+    1. Ctrl+A → Lock tất cả
+    2. Chọn A2:H500 → Unlock (toàn bộ vùng input user paste vào)
+    3. Protect Sheet → Password: [hỏi PM]
+
+  Advanced Setup Planner:
+    1. Ctrl+A → Lock tất cả
+    2. Chọn từng input cell (tất cả blue cells: EMA, RSI, price levels...) → Unlock
+    3. Protect Sheet → Password: [hỏi PM]
+
+  Instructions:
+    1. Ctrl+A → Lock tất cả (không có ô nào cần unlock)
+    2. Protect Sheet → Password: [hỏi PM]
+
+  Workbook protection (ngăn xóa/rename/thêm sheet):
+    Review → Protect Workbook → Structure → Password: [hỏi PM]
+
+Kết quả mong đợi: Click vào formula cell → Excel hiện thông báo "protected".
+                  Click vào input cell (blue) → vẫn gõ được bình thường.
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ VIỆC 11: THÊM NAVIGATION BUTTONS                                           │
+│ Thời gian dự kiến: 20 phút                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Không dùng macro. Dùng Shape + Hyperlink.
+Cách tạo: Insert → Shapes → Rounded Rectangle → gõ label → Right-click → Link →
+          Place in This Document → chọn sheet đích.
+
+Buttons cần tạo:
+
+  Sheet Summary:
+    [📖 Instructions]  → Link đến Instructions!A1
+
+  Sheet Daily Log:
+    [← Summary]        → Link đến Summary!A1
+
+  Sheet Raw daily data:
+    [← Summary]        → Link đến Summary!A1
+    [How to Import Data] → Link đến Instructions!A[row Section 5]
+
+  Sheet Advanced Setup Planner:
+    [← Summary]            → Link đến Summary!A1
+    [How to Use Planner]   → Link đến Instructions!A[row Section 6]
+
+  Sheet Instructions:
+    Thêm hyperlink text (không cần shape) dẫn đến từng tab:
+    → Go to Summary | → Go to Daily Log | → Go to Raw Data | → Go to Planner
+
+Kết quả mong đợi: Click nút → chuyển sheet đúng.
+
+
+================================================================================
+KIỂM TRA TRƯỚC KHI NỘP (QA CHECKLIST)
+================================================================================
+Làm đủ LÀM TOÀN BỘ checklist này trước khi báo cáo hoàn thành.
+
+□ 1.  Paste 5 trades thật vào Raw daily data → Daily Log tự tính đúng H,N,O,S,T,U
+□ 2.  Daily Log đúng → Summary tự tổng hợp đúng B11, B13, weekly table
+□ 3.  Advanced Setup Planner: nhập EMAs bullish → Side = "LONG"; bearish → "SHORT"
+□ 4.  Advanced Setup Planner: 4 ladders đều có Entry/TP/SL (không phải trống hay #REF!)
+□ 5.  Narrative Engine: có text tiếng Anh xuất hiện khi đủ inputs
+□ 6.  Macro Bias output: hiển thị "Buy dips" / "Sell rallies" / "Neutral" từ Backend
+□ 7.  Click vào ô công thức bất kỳ (xám) → bị chặn, không edit được
+□ 8.  Click vào ô input (xanh) → gõ được bình thường
+□ 9.  Right-click tab → Unhide → Backend KHÔNG XUẤT HIỆN trong danh sách
+□ 10. Tất cả navigation buttons hoạt động đúng đích
+□ 11. Không có ô nào hiện #REF! #DIV/0! #N/A! #VALUE!
+□ 12. Tất cả $ format đúng ($#,##0.00), % format đúng (0.0%)
+□ 13. P&L dương hiện màu xanh, âm hiện màu đỏ (conditional formatting)
+□ 14. Mở file từ đầu: không có popup "Enable Content" hay "Enable Macros"
+□ 15. Save thành công dạng .xlsx (không phải .xlsm)
+□ 16. Tất cả input cells trống (blank template sạch)
+□ 17. Font nhất quán Calibri xuyên suốt, không mixed fonts
+□ 18. Tab order đúng: Instructions → Summary → Daily Log → Raw daily data → Advanced Setup Planner
+
+================================================================================
+THỨ TỰ TAB CUỐI CÙNG
+================================================================================
+  [1] Instructions            (tab màu xám)
+  [2] Summary                 (tab màu xanh đậm)
+  [3] Daily Log               (tab màu xanh nhạt)
+  [4] Raw daily data          (tab màu tím nhạt)
+  [5] Advanced Setup Planner  (tab màu cam)
+  [6] Backend                 (Very Hidden – không thấy)
+
+================================================================================
+THÔNG TIN TRADING LOGIC (đọc để viết tooltips và Instructions chuẩn)
+================================================================================
+
+R-MULTIPLE
+  1R = số tiền mình sẵn sàng thua trong 1 trade (Risk per Trade).
+  Ví dụ: NAV $10,000 × 7% = $700 = 1R. Nếu win 2R = +$1,400.
+  Daily Log cột U (Daily R-multiple) = H/F = tổng lãi ngày / 1R.
+
+FIBONACCI LADDER
+  File dùng 3 entry points tại retracement 0.382, 0.500, 0.618 của swing.
+  Mỗi mức có weight khác nhau (0.20 / 0.35 / 0.45 của tổng size).
+  Tổng 3 weights phải = 1.0.
+
+SMC – SMART MONEY CONCEPTS
+  BOS (Break of Structure): Giá phá vỡ swing high/low trước đó → trend tiếp tục.
+  CHOCH (Change of Character): Xuất hiện BOS ngược chiều → trend đổi chiều.
+  Cả 2 nhập thủ công trong Planner sau khi quan sát chart.
+
+FVG – FAIR VALUE GAP
+  Khoảng trống giữa 3 candles liên tiếp (candle 1 high và candle 3 low không overlap).
+  Giá thường quay lại fill FVG trước khi tiếp tục xu hướng.
+  Workbook dùng làm entry zone cho ladders.
+
+OPTIONS GAMMA LEVELS
+  Các strike prices có open interest lớn tạo "lực hút" với giá.
+  Trong vòng 20 pips của một strike lớn → giá có xu hướng bị kéo về đó.
+  Workbook tự tính nearest strike và cảnh báo trong Narrative Engine.
+
+4 TRADE MODES
+  CoreLong  : Xu hướng HTF aligned rõ ràng → theo trend, full size
+  A+Long    : CoreLong tại vùng deep FVG/Fib block premium → có thể tăng size
+  CTshort   : Counter-trend SHORT tại key resistance khi macro neutral/weak
+  Avoid     : Hệ thống không confirm đủ điều kiện → KHÔNG TRADE hôm nay
+
+LUỒNG MACRO TRONG BACKEND
+  Macro_Data     → Chứa economic events (CPI, NFP, GDP, rate decisions)
+  Macro_Speakers → Tone của Powell, Lagarde, etc. → tính Fed/ECB sentiment
+  Macro_Rates    → Xác suất thay đổi lãi suất (rate band probabilities)
+  Macro_Dashboard→ Tổng hợp tất cả → output: EURUSD Macro Bias
+  Narrative_Engine→ Chuyển scores thành câu tiếng Anh cho trader đọc
+
+================================================================================
+END OF TASK BRIEF
+================================================================================
