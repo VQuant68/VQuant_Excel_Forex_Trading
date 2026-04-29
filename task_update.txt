@@ -1,0 +1,71 @@
+Tình trạng: Khách hàng đã review bản V1 và yêu cầu fix các lỗi (bugs) sau đây. Hãy làm theo từng mục, test kỹ trước khi báo cáo xong. Khách có gửi kèm file chứa data thật, dùng file đó để test.
+
+🔴 LỖI NGHIÊM TRỌNG (CRITICAL BUGS - PHẢI FIX NGAY)
+Lỗi khiến luồng hoạt động hàng ngày của user bị gãy.
+
+1. Missing Formulas ở sheet Raw daily data:
+
+Cột I (Trade Date) và Cột J (Cumulative P&L) đang bị trống trơn, hoàn toàn không có công thức.
+
+Cách fix: Viết/Copy lại công thức chuẩn vào Cột I và J. Đảm bảo khi paste data mới từ broker vào cột A-H thì 2 cột này tự động tính toán ra kết quả để feed sang sheet Daily Log.
+
+2. Bị khóa nhầm ô ở Advanced Setup Planner (Phần FVG):
+
+Các ô H5, H6, H7, H8, H9, H10 (4H FVG high/low, Daily FVG high/low, 1H FVG high/low) đang bị locked do lỗi bảo vệ sheet.
+
+Cách fix: Unlock các ô này để người dùng có thể nhập số liệu.
+
+3. Bị khóa nhầm ô ở Advanced Setup Planner (Phần Structure):
+
+Các ô E12 (EQL_below), E16 (Session High), E17 (HTF Swing Low), E18 (HTF Swing High) đang bị locked.
+
+Cách fix: Unlock toàn bộ các ô này.
+
+4. Bị khóa nhầm ô ở Advanced Setup Planner (Phần Options/Gamma):
+
+Vùng từ K5 đến K12 (Strike 1–4 values và Size in billions) đang bị locked.
+
+Cách fix: Unlock để người dùng nhập liệu.
+
+5. Lỗi #REF! ở ô O16 (Advanced Setup Planner):
+
+Công thức hiện tại đang bị hỏng: ='Advanced Setup Planner'!#REF!
+
+Cách fix: Sửa lại công thức để trỏ thẳng vào ô B16 (EMA20 1M).
+
+🟠 CẬP NHẬT QUAN TRỌNG (IMPORTANT - LIÊN QUAN ĐẾN TRẢI NGHIỆM)
+6. Vấn đề nhập liệu Data Vĩ mô (Macro Data):
+
+Vấn đề: Hiện tại toàn bộ khu vực nhập liệu Macro (speaker log, bond yields, economic events, rate probabilities) đang bị giấu kín trong sheet Backend (từ dòng 130). Người dùng cuối không biết cập nhật ở đâu, dẫn đến kết quả đầu ra luôn dùng số liệu cũ từ tháng 12/2025.
+
+Cách fix: Khách yêu cầu tạo ra một sheet mới hiển thị rõ ràng tên là "Macro Hub" (tách phần nhập liệu macro từ Backend ra đây) ĐỂ người dùng có thể thấy và nhập liệu hàng tuần. Nếu không tách, phải có hướng dẫn cực kỳ rõ ràng, hiển thị to trong workbook cách update. Ưu tiên phương án tách sheet "Macro Hub" cho chuyên nghiệp và dễ dùng.
+
+7. Lỗi hiển thị tin nhắn ở CT Ladder:
+
+Câu thông báo hiện đang bị trống biến Side: "CT inactive (Side is )."
+
+Cách fix: Sửa lại công thức chuỗi (string formula) để nó tự động nhúng giá trị của ô Side vào đúng chỗ (Ví dụ: "CT inactive (Side is LONG).").
+
+🟡 LỖI NHỎ (MINOR FORMATTING)
+8. Ở sheet Advanced Setup Planner: Label "RSI 15M" chưa được in đậm (Bold). Cần bôi đậm cho đồng bộ với các nhãn xung quanh.
+
+9. Ở sheet Summary: Ô "Required R per week" đang bị trống. Cần thêm công thức: (Monthly target / Số tuần) hoặc (Monthly target ÷ Risk parameters) tùy theo logic gốc của bảng.
+
+LƯU Ý ĐẶC BIỆT VỀ "NARRATIVE ENGINE" (YÊU CẦU LÕI CỦA KHÁCH)
+Khách hàng nhấn mạnh file này bán cho cộng đồng Trader có trả phí, nên hệ thống sinh text tự động (Narrative Engine) KHÔNG ĐƯỢC sinh ra các câu chung chung (generic AI text). Nó phải phân tích giống hệt như một chuyên gia vĩ mô thực thụ. Yêu cầu kiểm tra lại sheet Backend/Engine xem đã xuất đủ các dòng Output này chưa:
+
+Macro Bias: Trả về "Buy dips" / "Sell rallies" / "Neutral" (Dựa trên điểm USD vs EUR).
+
+Rate Differential: Trả về câu văn rõ ràng, ví dụ: "2.37 USD advantage, narrowing over 6 months".
+
+Yield Narrative: Câu văn dịch nghĩa biến động trái phiếu (Ví dụ biến động 2Y ảnh hưởng gì đến Fed).
+
+Directional Bias: LONG hoặc SHORT (Kết hợp giữa Macro Score và HTF EMA).
+
+Trade Mode: CoreLong / A+Long / CTshort / Avoid.
+
+Plain English Narrative: 1 câu tổng hợp 2-3 ý mượt mà. (VD: "Vĩ mô ủng hộ phe Long EUR. Lợi thế USD đang thu hẹp do FED dự kiến cắt giảm lãi suất. Cấu trúc giá tăng trên HTF — canh mua vào vùng 0.382–0.618 Fibonacci.")
+
+Action: Kết luận ngắn gọn duy nhất: Hôm nay làm gì, quan sát mốc nào, hay đứng ngoài.
+
+(Tham khảo file data gốc khách mới gửi để xem họ update dữ liệu từ ForexFactory và CME FedWatch như thế nào để set rule cho đúng).

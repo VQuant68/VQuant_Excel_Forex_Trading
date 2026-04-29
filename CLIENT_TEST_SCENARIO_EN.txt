@@ -1,0 +1,65 @@
+================================================================================
+CLIENT WALKTHROUGH — FULL-FLOW TESTING SCENARIO
+================================================================================
+
+Imagine you are a Trader who just received the "Trading_Workbook_MASTER.xlsx" file.
+Follow the 4 steps below to experience how the system automates your entire workflow:
+
+--------------------------------------------------------------------------------
+STEP 1: SET YOUR MONTHLY GOALS (Do this once at the start of each month)
+--------------------------------------------------------------------------------
+* Open the file and navigate to the "Summary" tab. This is where you configure
+  your capital and risk parameters.
+* Enter the following values in column B (only type in the green-highlighted cells):
+  - B2 (Monthly Target)         : 2000    (Your profit goal: $2,000/month)
+  - B3 (Planned Trading Days)   : 20      (You plan to trade 20 days)
+  - B5 (Weeks in Cycle)         : 4       (4 weeks in this month)
+  - B8 (Risk % of NAV)          : 0.05    (Risk 5% of your account per trade)
+  - B9 (Max Daily Loss)         : 2       (Stop trading after losing 2R in a day)
+  - B10 (Starting NAV)          : 10000   (Starting capital: $10,000)
+👉 Result: Cell B4 auto-calculates "You need to earn $100 per day to hit your
+   monthly target."
+
+--------------------------------------------------------------------------------
+STEP 2: PLAN YOUR TRADE ENTRY (Do this before each trading session)
+--------------------------------------------------------------------------------
+* Switch to the "Advanced Setup Planner" tab. You will input data from your
+  TradingView charts here.
+* Enter EMA values for the system to analyze trend direction:
+  - Column B (B5 to B16): Type the following values (simulating a LONG trend):
+    1.155, 1.150, 1.148, 1.145, 1.140, 1.140, 1.135, 1.130, 1.125, 1.120, 1.115, 1.110
+  - Cell E13 (Leg Low)           : 1.150
+  - Cell E14 (Leg High)          : 1.160
+* (Press F9 or Fn+F9 if values don't update immediately.)
+👉 Result: Scroll down to the bottom. The system displays a "LONG" trend signal.
+   The Entry Ladder tables show pre-calculated entry prices, stop-loss levels,
+   and position sizes. Simply copy these numbers to your broker platform.
+
+--------------------------------------------------------------------------------
+STEP 3: LOG YOUR TRADE HISTORY (Do this after each trading session)
+--------------------------------------------------------------------------------
+* After closing trades on MT4/MT5, export your trade history.
+* Switch to the "Raw daily data" tab. Click cell A2 and Paste your trade data.
+* Sample data to copy/paste for testing (highlight the line below and paste):
+  EURUSD	EURUSD	Buy	0.5	1.1560	250.00	101	Mon, 01 May 2026 09:00:00 GMT
+👉 Result: The Profit column (F2) instantly turns GREEN showing $250.00.
+
+--------------------------------------------------------------------------------
+STEP 4: ENJOY THE AUTOMATED RESULTS (End of day review)
+--------------------------------------------------------------------------------
+* Switch to the "Daily Log" tab to close out today's record:
+  - Type in cell A2 (Date)       : 5/1/2026
+  - Type in cell B2 (Week #)     : 1
+  - Type in cell D2 (Traded?)    : Y
+  (Press F9 if needed.)
+👉 Result: Net P&L shows $250 in green, Win Rate reports 100%, and your
+   R-Multiple is auto-calculated.
+
+* Finally, go back to the "Summary" tab:
+👉 Result: The big picture appears. Your Current NAV has jumped to $10,250.
+   The Weekly Table under Week 1 records a profit of $250.
+
+================================================================================
+Conclusion: The client does not need to manually calculate any cash flows.
+The system runs seamlessly from pre-trade analysis to post-trade accounting!
+================================================================================
